@@ -1,0 +1,18 @@
+metricbeat:
+  image: docker.elastic.co/beats/metricbeat:6.2.4
+  user: root
+  volumes:
+    - /proc:/hostfs/proc:ro
+    - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+    - /:/hostfs:ro
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./metricbeat.docker.yml:/usr/share/metricbeat/metricbeat.yml:ro
+  environment:
+    - ELASTICSEARCH_HOST=localhost:9200
+    - KIBANA_HOST=localhost:5601
+  networks:
+    - elk
+  command: -system.hostfs=/hostfs
+
+networks:
+  elk:

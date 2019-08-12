@@ -1,0 +1,66 @@
+version: "3"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    volumes:
+      - ./elasticsearch/es_data:/usr/share/elasticsearch/data
+      - ./elasticsearch/config/elasticserach.yml:/usr/share/elasticsearch/config/elasticserach.yml
+    networks:
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:6.2.4
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xms1g -Xmx1g"
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./log:/var/log/logstash/input
+    networks:
+      - elk
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.2.4
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    networks:
+      - elk
+
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:6.2.4
+    restart: unless-stopped
+    pid: host
+    user: root
+    command: -e
+    volumes:
+      - /proc:/hostfs/proc:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /:/hostfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./metricbeat.docker.yml:/usr/share/metricbeat/metricbeat.yml:ro
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch:9200
+      - KIBANA_HOST=kibana:5601
+      # - LOGSTASH_HOST=logstash:5044
+    # networks:
+    # - elk
+    network_mode: host
+    depends_on:
+      - elasticsearch
+      # - logstash
+    # command:
+    #   - "-system.hostfs=/hostfs"
+    # command: bash -c "metricbeat setup --template -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["localhost:9200"]' && metricbeat setup --dashboards"
+
+networks:
+  elk:
