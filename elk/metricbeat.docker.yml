@@ -55,7 +55,7 @@ processors:
   - add_cloud_metadata: ~
 
 output.elasticsearch:
-hosts: "http://localhost:9200"
+  hosts: "http://localhost:9200"
 
 # output.logstash:
 # hosts: "http://localhost:5044"
